@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,7 +27,8 @@ public class SimpleImageResizeTool {
     private static String hint;
     private static Map<String, BufferedImage> imageFiles = new HashMap<>();
     
-//    private static final List<String> allowedImageFormats = ImmutableList.of("png","jpg","gif");
+    private static final ImmutableList<String> outputImageFormats = ImmutableList.of("png","jpg","gif");
+    private static final ImmutableList<String> supportedScalingHints = ImmutableList.of("bicubic", "bilinear");
 
     public static void main(String[] args) throws Exception {
         final Options options = new Options();
@@ -40,52 +40,97 @@ public class SimpleImageResizeTool {
         options.addOption("hint", true, "Scaling hint");
         options.addOption("help", "Help/Usage");
         
-        if (parseArguments(args, options)) {
+        if (parseAndPrepareArguments(args, options)) {
             createBufferedImages();
             resizeAndWriteImages();
         }
     }
 
-    private static boolean parseArguments(String[] args, Options options) throws ParseException {
+    private static boolean parseAndPrepareArguments(String[] args, Options options) {
+        // parse through arguments and prepare them appropriately
+        
         final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
-
-        if (cmd.hasOption("help")) {
-            System.out.println("Simple Image Resize Tool v" + version);
-            System.out.println("Parta Games 2015");
-            System.out.println();
-            System.out.println("Usage:");
-            System.out.println("resize -images <comma separated list of image files> -width <target width> -height <target height> -t <target output folder>");
-            System.out.println("[optional arguments: -format <output image format (png, jpg, gif)> -hint <scaling hint (c=cubic, b=bilinear)]");
-            System.out.println();
-            System.out.println("Supported input and output image files: PNG,JPG,GIF");
+        final CommandLine cmd;
+        try {
+            cmd = parser.parse(options, args);
+        } catch (ParseException e) {
+            System.out.println("There was a problem parsing the command line arguments, please check your command.");
             return false;
         }
 
-        if (cmd.hasOption("images")) {
+        if (cmd.hasOption("help")) {
+            printHelpAndUsage();
+            return false;
+        }
+        
+        // prepare required arguments
+        boolean requiredArgumentMissing = false;
+        if (cmd.hasOption("images") && !cmd.getOptionValue("images").isEmpty()) {
             final String imageFileListString = cmd.getOptionValue("images");
             imageFileStrings = imageFileListString.split(",");
+        } else {
+            requiredArgumentMissing = true;
         }
-        if (cmd.hasOption("target")) {
-            System.out.println("Got target folder! " + cmd.getOptionValue("target"));
-        }
-        if (cmd.hasOption("width")) {
+        if (cmd.hasOption("width") && !cmd.getOptionValue("width").isEmpty()) {
             final String widthString = cmd.getOptionValue("width");
             try {
                 width = Integer.parseInt(widthString);
             } catch (Exception e) {
                 System.out.println("Width argument was not a number!");
+                requiredArgumentMissing = true;
             }
+        } else {
+            requiredArgumentMissing = true;
         }
-        if (cmd.hasOption("height")) {
+        if (cmd.hasOption("height") && !cmd.getOptionValue("height").isEmpty()) {
             final String heightString = cmd.getOptionValue("height");
             try {
                 height = Integer.parseInt(heightString);
             } catch (Exception e) {
                 System.out.println("Height argument was not a number!");
+                requiredArgumentMissing = true;
+            }
+        } else {
+            requiredArgumentMissing = true;
+        }
+        
+        // stop execution if a required argument is missing
+        if (requiredArgumentMissing) {
+            printHelpAndUsage();
+            return false;
+        }
+
+        // prepare optional arguments
+        if (cmd.hasOption("target")) {
+            System.out.println("Got target folder! " + cmd.getOptionValue("target"));
+        }
+        if (cmd.hasOption("format")) {
+            final String outputFormat = cmd.getOptionValue("format").toLowerCase();
+            if (outputImageFormats.contains(outputFormat)) {
+                
+            } else {
+                System.out.println("Error: Wrong output image format");
+                printHelpAndUsage();
+                return false;
             }
         }
+        if (cmd.hasOption("target")) {
+            System.out.println("Got target folder! " + cmd.getOptionValue("target"));
+        }
+        
         return true;
+    }
+
+    private static void printHelpAndUsage() {
+        System.out.println("--- Simple Image Resize Tool v" + version + " ---");
+        System.out.println("           Parta Games 2015");
+        System.out.println();
+        System.out.println("Usage:");
+        System.out.println("resize -images <comma separated list of image files> -width <target width> -height <target height>");
+        System.out.println("[optional arguments: -target <target output folder> -format <output image format> -hint <scaling hint>]");
+        System.out.println();
+        System.out.println("Input and output image formats: " + outputImageFormats.toString());
+        System.out.println("Scaling hints: " + supportedScalingHints.toString());
     }
 
     private static void createBufferedImages() {
