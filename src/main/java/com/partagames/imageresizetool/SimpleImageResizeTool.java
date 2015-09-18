@@ -8,6 +8,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,22 +78,32 @@ public class SimpleImageResizeTool {
 
     private static void resizeAndWriteImages() {
 
+        // create output folder if it does not exist
         final File outputFolder = new File("output/");
         if (!outputFolder.exists()) {
             outputFolder.mkdirs();
         }
 
+        // resize and write images
         int i = 0;
         for (String key : imageFiles.keySet()) {
             i++;
+            
+            final String fileName = extractFileNameFromPath(key);
+            
             final BufferedImage image = imageFiles.get(key);
             final BufferedImage scaledImage = resizeImg(image, width, height);
             try {
-                ImageIO.write(scaledImage, "png", new File("output/" + width + "_x_" + height + "_image_" + i + ".png"));
+                ImageIO.write(scaledImage, "png", new File("output/" + width + "_x_" + height + " " + fileName + ".png"));
             } catch (IOException e) {
                 System.out.println("Cannot write " + key + " to output folder. Ignoring...");
             }
         }
+    }
+
+    private static String extractFileNameFromPath(String filePath) {
+        final Path p = Paths.get(filePath);
+        return p.getFileName().toString();
     }
 
     public static BufferedImage resizeImg(BufferedImage img, int newW, int newH) {
