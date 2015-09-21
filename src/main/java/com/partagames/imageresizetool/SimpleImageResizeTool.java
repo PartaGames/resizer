@@ -22,20 +22,28 @@ public class SimpleImageResizeTool {
 
     private static Options options;
     private static String[] imageFileStrings;
-    private static int width;
-    private static int height;
+    private static Dimensions dimensions;
     private static String format;
-    private static String hint;
-    private static Map<String, BufferedImage> imageFiles = new HashMap<>();
+    private static String scalinghint;
+
+    private static final Map<String, BufferedImage> imageFiles = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         options = new Options();
-        options.addOption(ARG_WIDTH_SHORT, ARG_WIDTH, true, "Target image width in pixels");
-        options.addOption(ARG_HEIGHT_SHORT, ARG_HEIGHT, true, "Target image height in pixels");
-        options.addOption(ARG_FORMAT_SHORT, ARG_FORMAT, true, "Image output format (png,jpg.gif)");
-        options.addOption(ARG_OUTPUT_SHORT, ARG_OUTPUT, true, "Image output folder");
-        options.addOption(ARG_HINT_SHORT, ARG_HINT, true, "Scaling hint (bicubic, bilinear)");
-        options.addOption(ARG_HELP_SHORT, ARG_HELP, true, "Shows this help message.");
+
+        // required options
+        options.addOption(Option.builder(ARG_DIMENSIONS_SHORT).longOpt(ARG_DIMENSIONS).hasArg(true).optionalArg(false)
+                .desc("Target image dimensions in pixels (e.g 1280x720)").required(true).build());
+
+        // optional options
+        options.addOption(Option.builder(ARG_FORMAT_SHORT).longOpt(ARG_FORMAT).hasArg(true).optionalArg(false)
+                .desc("Image output format (png,jpg,gif)").required(false).build());
+        options.addOption(Option.builder(ARG_OUTPUT_SHORT).longOpt(ARG_OUTPUT).hasArg(true).optionalArg(false)
+                .desc("Image output folder").required(false).build());
+        options.addOption(Option.builder(ARG_HINT_SHORT).longOpt(ARG_HINT).hasArg(true).optionalArg(false)
+                .desc("Scaling hint (bicubic, bilinear)").required(false).build());
+        options.addOption(Option.builder(ARG_HELP_SHORT).longOpt(ARG_HELP).hasArg(false)
+                .desc("Shows this help message.").required(false).build());
 
         if (parseAndPrepareArguments(args, options)) {
             createBufferedImages();
@@ -50,69 +58,58 @@ public class SimpleImageResizeTool {
         final CommandLine cmd;
         try {
             cmd = parser.parse(options, args);
-        } catch (ParseException e) {
-            System.out.println("There was a problem parsing the command line arguments, please check your command.");
+        } catch (MissingOptionException | MissingArgumentException e) {
+            System.out.println(e.getMessage() + "\n");
+            printHelpAndUsage();
             return false;
+        } catch (ParseException e2) {
+            System.out.println("There was a problem parsing the command line arguments, please check your command.\n");
+            printHelpAndUsage();
+            throw new RuntimeException(e2);
         }
 
+        // show help
         if (cmd.hasOption(ARG_HELP)) {
             printHelpAndUsage();
             return false;
         }
-
-        // prepare required arguments
-        boolean requiredArgumentMissing = false;
-        if (cmd.hasOption("images") && !cmd.getOptionValue("images").isEmpty()) {
-            final String imageFileListString = cmd.getOptionValue("images");
-            imageFileStrings = imageFileListString.split(",");
-        } else {
-            requiredArgumentMissing = true;
-        }
-        if (cmd.hasOption("width") && !cmd.getOptionValue("width").isEmpty()) {
-            final String widthString = cmd.getOptionValue("width");
-            try {
-                width = Integer.parseInt(widthString);
-            } catch (Exception e) {
-                System.out.println("Width argument was not a number!");
-                requiredArgumentMissing = true;
-            }
-        } else {
-            requiredArgumentMissing = true;
-        }
-        if (cmd.hasOption("height") && !cmd.getOptionValue("height").isEmpty()) {
-            final String heightString = cmd.getOptionValue("height");
-            try {
-                height = Integer.parseInt(heightString);
-            } catch (Exception e) {
-                System.out.println("Height argument was not a number!");
-                requiredArgumentMissing = true;
-            }
-        } else {
-            requiredArgumentMissing = true;
-        }
-
-        // stop execution if a required argument is missing
-        if (requiredArgumentMissing) {
+        
+        if (cmd.getArgList().isEmpty()) {
+            System.out.println("Missing argument: comma-separated list of images!\n");
             printHelpAndUsage();
-            return false;
+        } else {
+            imageFileStrings = cmd.getArgList().get(0).split(",");
         }
-
-        // prepare optional arguments
-        if (cmd.hasOption("target")) {
-            System.out.println("Got target folder! " + cmd.getOptionValue("target"));
-        }
-        if (cmd.hasOption("format")) {
-            final String outputFormat = cmd.getOptionValue("format").toLowerCase();
-            if (Constants.OUTPUT_IMAGE_FORMATS.contains(outputFormat)) {
-
-            } else {
-                System.out.println("Error: Wrong output image format");
+        
+        
+        // prepare mandatory arguments
+        if (cmd.hasOption(ARG_DIMENSIONS)) {
+            final String[] dimensionStrings = cmd.getOptionValue(ARG_DIMENSIONS).split("x");
+            try {
+                dimensions = new Dimensions(Integer.parseInt(dimensionStrings[0]), Integer.parseInt(dimensionStrings[1]));
+            } catch (Exception e) {
+                System.out.println("Dimension argument was not correct!\n");
                 printHelpAndUsage();
                 return false;
             }
         }
-        if (cmd.hasOption("target")) {
-            System.out.println("Got target folder! " + cmd.getOptionValue("target"));
+
+        // prepare optional arguments
+        if (cmd.hasOption(ARG_OUTPUT)) {
+            System.out.println("Output folder not implemented!");
+        }
+        if (cmd.hasOption(ARG_FORMAT)) {
+            final String outputFormat = cmd.getOptionValue("format").toLowerCase();
+            if (Constants.OUTPUT_IMAGE_FORMATS.contains(outputFormat)) {
+
+            } else {
+                System.out.println("Error: Wrong output image format!\n");
+                printHelpAndUsage();
+                return false;
+            }
+        }
+        if (cmd.hasOption(ARG_HINT)) {
+            System.out.println("Scaling hint not implemented!"); 
         }
 
         return true;
@@ -129,7 +126,7 @@ public class SimpleImageResizeTool {
             try {
                 imageFiles.put(imageFileStrings[i], ImageIO.read(new File(imageFileStrings[i])));
             } catch (IOException e) {
-                System.out.println("Image " + imageFileStrings[i] + " corrupted or not supported, ignoring...");
+                System.out.println("File " + imageFileStrings[i] + " missing, corrupted or not supported, ignoring...");
             }
         }
     }
@@ -150,9 +147,10 @@ public class SimpleImageResizeTool {
             final String fileName = extractFileNameFromPath(key);
 
             final BufferedImage image = imageFiles.get(key);
-            final BufferedImage scaledImage = scale(image, width, height);
+            final BufferedImage scaledImage = scale(image, dimensions.width, dimensions.height);
             try {
-                ImageIO.write(scaledImage, "png", new File("output/" + width + "_x_" + height + " " + fileName + ".png"));
+                ImageIO.write(scaledImage, "png",
+                        new File("output/" + dimensions.width + "_x_" + dimensions.height + " " + fileName + ".png"));
             } catch (IOException e) {
                 System.out.println("Cannot write " + key + " to output folder. Ignoring...");
             }

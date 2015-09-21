@@ -11,15 +11,13 @@ public class Constants {
     public static final ImmutableList<String> SUPPORTED_SCALING_HINTS = ImmutableList.of("bicubic", "bilinear");
     
     // list the command line arguments
-    public static final String ARG_WIDTH_SHORT = "w";
-    public static final String ARG_HEIGHT_SHORT = "h";
+    public static final String ARG_DIMENSIONS_SHORT = "d";
     public static final String ARG_OUTPUT_SHORT = "o";
     public static final String ARG_FORMAT_SHORT = "f";
     public static final String ARG_HINT_SHORT = "s";
     public static final String ARG_HELP_SHORT = "h";
     
-    public static final String ARG_WIDTH = "width";
-    public static final String ARG_HEIGHT = "height";
+    public static final String ARG_DIMENSIONS = "dimensions";
     public static final String ARG_OUTPUT = "output";
     public static final String ARG_FORMAT = "format";
     public static final String ARG_HINT = "scalinghint";
