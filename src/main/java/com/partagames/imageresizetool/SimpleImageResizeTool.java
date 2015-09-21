@@ -25,7 +25,7 @@ public class SimpleImageResizeTool {
     private static Dimensions dimensions;
     private static Path outputFolder;
     private static String format = OUTPUT_IMAGE_FORMATS.get(0); // default png
-    private static String scalinghint = SUPPORTED_SCALING_HINTS.get(1); // default bilinear
+    private static String scalingHint = SUPPORTED_SCALING_HINTS.get(1); // default bilinear
 
     private static final Map<String, BufferedImage> imageFiles = new HashMap<>();
 
@@ -52,6 +52,13 @@ public class SimpleImageResizeTool {
         }
     }
 
+    /**
+     * Parses all command line arguments and prepares them.
+     *
+     * @param args    Command line arguments.
+     * @param options Apache CLI options
+     * @return True if arguments were prepared correctly and we can continue execution
+     */
     private static boolean parseAndPrepareArguments(String[] args, Options options) {
         // parse through arguments and prepare them appropriately
 
@@ -117,12 +124,18 @@ public class SimpleImageResizeTool {
         return true;
     }
 
+    /**
+     * Prints help and usage.
+     */
     private static void printHelpAndUsage() {
         // automatically generate the help statement
         final HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("resizer [options ...] [/folder/image1,/folder/image2 ...]", options);
     }
 
+    /**
+     * Reads the images to memory.
+     */
     private static void createBufferedImages() {
         for (int i = 0; i < imageFileStrings.length; i++) {
             try {
@@ -133,6 +146,9 @@ public class SimpleImageResizeTool {
         }
     }
 
+    /**
+     * Resizes and writes the images to the given or default output folder.
+     */
     private static void resizeAndWriteImages() {
 
         File outputFolderFile;
@@ -191,7 +207,7 @@ public class SimpleImageResizeTool {
         final Graphics2D g = dimg.createGraphics();
 
         // use provided rendering hint, default is bilinear 
-        switch (scalinghint) {
+        switch (scalingHint) {
             case "n":
                 g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                         RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
