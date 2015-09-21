@@ -71,7 +71,7 @@ public class SimpleImageResizeTool {
             printHelpAndUsage();
             return false;
         } catch (ParseException e2) {
-            System.out.println("There was a problem parsing the command line arguments, please check your command.\n");
+            System.out.println("Error: There was a problem parsing the command line arguments, please check your command.\n");
             printHelpAndUsage();
             throw new RuntimeException(e2);
         }
@@ -83,7 +83,7 @@ public class SimpleImageResizeTool {
         }
 
         if (cmd.getArgList().isEmpty()) {
-            System.out.println("Missing argument: comma-separated list of images!\n");
+            System.out.println("Error: Missing argument: comma-separated list of images!\n");
             printHelpAndUsage();
             return false;
         } else {
@@ -97,7 +97,7 @@ public class SimpleImageResizeTool {
             try {
                 dimensions = new Dimensions(Integer.parseInt(dimensionStrings[0]), Integer.parseInt(dimensionStrings[1]));
             } catch (Exception e) {
-                System.out.println("Dimension argument was not correct!\n");
+                System.out.println("Error: Dimension argument was not correct!\n");
                 printHelpAndUsage();
                 return false;
             }
@@ -118,7 +118,14 @@ public class SimpleImageResizeTool {
             }
         }
         if (cmd.hasOption(ARG_HINT)) {
-            System.out.println("Scaling hint not implemented!");
+            final String scalingHintString = cmd.getOptionValue(ARG_HINT);
+            if (SUPPORTED_SCALING_HINTS.contains(scalingHintString)) {
+                scalingHint = scalingHintString;
+            } else {
+                System.out.println("Error: Wrong scaling hint!\n");
+                printHelpAndUsage();
+                return false;
+            }
         }
 
         return true;
@@ -141,7 +148,7 @@ public class SimpleImageResizeTool {
             try {
                 imageFiles.put(imageFileStrings[i], ImageIO.read(new File(imageFileStrings[i])));
             } catch (IOException e) {
-                System.out.println("File " + imageFileStrings[i] + " missing, corrupted or not supported, ignoring...");
+                System.out.println("Warning: File " + imageFileStrings[i] + " missing, corrupted or not supported, ignoring...");
             }
         }
     }
@@ -174,9 +181,9 @@ public class SimpleImageResizeTool {
             final BufferedImage scaledImage = scale(image, dimensions.width, dimensions.height);
             try {
                 ImageIO.write(scaledImage, format,
-                        new File(outputFolderFile.getPath() + "/" + dimensions.width + "_x_" + dimensions.height + "_" + fileName + ".png"));
+                        new File(outputFolderFile.getPath() + "/" + dimensions.width + "_x_" + dimensions.height + "_" + fileName + "." + format));
             } catch (IOException e) {
-                System.out.println("Cannot write " + key + " to output folder. Ignoring...");
+                System.out.println("Error: Cannot write " + key + " to output folder. Ignoring...");
             }
         }
     }
