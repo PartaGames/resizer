@@ -12,12 +12,15 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.partagames.imageresizetool.Constants.*;
+
 /**
  * Simple tool that takes a list of image files as arguments and saves new resized image files to the given folder.
  * Created by Antti on 18.9.2015.
  */
 public class SimpleImageResizeTool {
 
+    private static Options options;
     private static String[] imageFileStrings;
     private static int width;
     private static int height;
@@ -26,14 +29,13 @@ public class SimpleImageResizeTool {
     private static Map<String, BufferedImage> imageFiles = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
-        final Options options = new Options();
-        options.addOption("images", true, "Comma separated list of image files");
-        options.addOption("target", true, "Target folder where resized images are saved");
-        options.addOption("width", true, "Target image width");
-        options.addOption("height", true, "Target image height");
-        options.addOption("format", true, "Target image format");
-        options.addOption("hint", true, "Scaling hint");
-        options.addOption("help", "Help/Usage");
+        options = new Options();
+        options.addOption(ARG_WIDTH_SHORT, ARG_WIDTH, true, "Target image width in pixels");
+        options.addOption(ARG_HEIGHT_SHORT, ARG_HEIGHT, true, "Target image height in pixels");
+        options.addOption(ARG_FORMAT_SHORT, ARG_FORMAT, true, "Image output format (png,jpg.gif)");
+        options.addOption(ARG_OUTPUT_SHORT, ARG_OUTPUT, true, "Image output folder");
+        options.addOption(ARG_HINT_SHORT, ARG_HINT, true, "Scaling hint (bicubic, bilinear)");
+        options.addOption(ARG_HELP_SHORT, ARG_HELP, true, "Shows this help message.");
 
         if (parseAndPrepareArguments(args, options)) {
             createBufferedImages();
@@ -53,7 +55,7 @@ public class SimpleImageResizeTool {
             return false;
         }
 
-        if (cmd.hasOption("help")) {
+        if (cmd.hasOption(ARG_HELP)) {
             printHelpAndUsage();
             return false;
         }
@@ -101,7 +103,7 @@ public class SimpleImageResizeTool {
         }
         if (cmd.hasOption("format")) {
             final String outputFormat = cmd.getOptionValue("format").toLowerCase();
-            if (Constants.outputImageFormats.contains(outputFormat)) {
+            if (Constants.OUTPUT_IMAGE_FORMATS.contains(outputFormat)) {
 
             } else {
                 System.out.println("Error: Wrong output image format");
@@ -117,15 +119,9 @@ public class SimpleImageResizeTool {
     }
 
     private static void printHelpAndUsage() {
-        System.out.println("--- Simple Image Resize Tool v" + Constants.version + " ---");
-        System.out.println("           Parta Games 2015");
-        System.out.println();
-        System.out.println("Usage:");
-        System.out.println("resize -images <comma separated list of image files> -width <target width> -height <target height>");
-        System.out.println("[optional arguments: -target <target output folder> -format <output image format> -hint <scaling hint>]");
-        System.out.println();
-        System.out.println("Input and output image formats: " + Constants.outputImageFormats.toString());
-        System.out.println("Scaling hints: " + Constants.supportedScalingHints.toString());
+        // automatically generate the help statement
+        final HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("resizer [options ...] [/folder/image1,/folder/image2 ...]", options);
     }
 
     private static void createBufferedImages() {
