@@ -1,6 +1,5 @@
 package com.partagames.imageresizetool;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.cli.*;
 
 import javax.imageio.ImageIO;
@@ -19,16 +18,12 @@ import java.util.Map;
  */
 public class SimpleImageResizeTool {
 
-    private static final String version = "0.0.1";
     private static String[] imageFileStrings;
     private static int width;
     private static int height;
     private static String format;
     private static String hint;
     private static Map<String, BufferedImage> imageFiles = new HashMap<>();
-    
-    private static final ImmutableList<String> outputImageFormats = ImmutableList.of("png","jpg","gif");
-    private static final ImmutableList<String> supportedScalingHints = ImmutableList.of("bicubic", "bilinear");
 
     public static void main(String[] args) throws Exception {
         final Options options = new Options();
@@ -39,7 +34,7 @@ public class SimpleImageResizeTool {
         options.addOption("format", true, "Target image format");
         options.addOption("hint", true, "Scaling hint");
         options.addOption("help", "Help/Usage");
-        
+
         if (parseAndPrepareArguments(args, options)) {
             createBufferedImages();
             resizeAndWriteImages();
@@ -48,7 +43,7 @@ public class SimpleImageResizeTool {
 
     private static boolean parseAndPrepareArguments(String[] args, Options options) {
         // parse through arguments and prepare them appropriately
-        
+
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd;
         try {
@@ -62,7 +57,7 @@ public class SimpleImageResizeTool {
             printHelpAndUsage();
             return false;
         }
-        
+
         // prepare required arguments
         boolean requiredArgumentMissing = false;
         if (cmd.hasOption("images") && !cmd.getOptionValue("images").isEmpty()) {
@@ -93,7 +88,7 @@ public class SimpleImageResizeTool {
         } else {
             requiredArgumentMissing = true;
         }
-        
+
         // stop execution if a required argument is missing
         if (requiredArgumentMissing) {
             printHelpAndUsage();
@@ -106,8 +101,8 @@ public class SimpleImageResizeTool {
         }
         if (cmd.hasOption("format")) {
             final String outputFormat = cmd.getOptionValue("format").toLowerCase();
-            if (outputImageFormats.contains(outputFormat)) {
-                
+            if (Constants.outputImageFormats.contains(outputFormat)) {
+
             } else {
                 System.out.println("Error: Wrong output image format");
                 printHelpAndUsage();
@@ -117,20 +112,20 @@ public class SimpleImageResizeTool {
         if (cmd.hasOption("target")) {
             System.out.println("Got target folder! " + cmd.getOptionValue("target"));
         }
-        
+
         return true;
     }
 
     private static void printHelpAndUsage() {
-        System.out.println("--- Simple Image Resize Tool v" + version + " ---");
+        System.out.println("--- Simple Image Resize Tool v" + Constants.version + " ---");
         System.out.println("           Parta Games 2015");
         System.out.println();
         System.out.println("Usage:");
         System.out.println("resize -images <comma separated list of image files> -width <target width> -height <target height>");
         System.out.println("[optional arguments: -target <target output folder> -format <output image format> -hint <scaling hint>]");
         System.out.println();
-        System.out.println("Input and output image formats: " + outputImageFormats.toString());
-        System.out.println("Scaling hints: " + supportedScalingHints.toString());
+        System.out.println("Input and output image formats: " + Constants.outputImageFormats.toString());
+        System.out.println("Scaling hints: " + Constants.supportedScalingHints.toString());
     }
 
     private static void createBufferedImages() {
@@ -155,9 +150,9 @@ public class SimpleImageResizeTool {
         int i = 0;
         for (String key : imageFiles.keySet()) {
             i++;
-            
+
             final String fileName = extractFileNameFromPath(key);
-            
+
             final BufferedImage image = imageFiles.get(key);
             final BufferedImage scaledImage = scale(image, width, height);
             try {
@@ -170,6 +165,7 @@ public class SimpleImageResizeTool {
 
     /**
      * Extracts file name from full file path.
+     *
      * @param filePath File path
      * @return File name
      */
@@ -180,7 +176,8 @@ public class SimpleImageResizeTool {
 
     /**
      * Scales an image to the desired dimensions.
-     * @param img Original image
+     *
+     * @param img  Original image
      * @param newW Target width
      * @param newH Target height
      * @return Scaled image
