@@ -108,15 +108,16 @@ public class SimpleImageResizeTool {
             outputFolder = Paths.get(cmd.getOptionValue(ARG_OUTPUT));
         }
         if (cmd.hasOption(ARG_FORMAT)) {
-            final String outputFormat = cmd.getOptionValue("format").toLowerCase();
-            if (Constants.OUTPUT_IMAGE_FORMATS.contains(outputFormat)) {
-
+            final String outputFormatString = cmd.getOptionValue("format").toLowerCase();
+            if (Constants.OUTPUT_IMAGE_FORMATS.contains(outputFormatString)) {
+                format = outputFormatString;
             } else {
                 System.out.println("Error: Wrong output image format!\n");
                 printHelpAndUsage();
                 return false;
             }
         }
+        
         if (cmd.hasOption(ARG_HINT)) {
             final String scalingHintString = cmd.getOptionValue(ARG_HINT);
             if (SUPPORTED_SCALING_HINTS.contains(scalingHintString)) {
