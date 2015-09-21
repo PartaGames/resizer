@@ -8,7 +8,7 @@ import com.google.common.collect.ImmutableList;
 public class Constants {
     public static final String VERSION = "0.0.1";
     public static final ImmutableList<String> OUTPUT_IMAGE_FORMATS = ImmutableList.of("png", "jpg", "gif");
-    public static final ImmutableList<String> SUPPORTED_SCALING_HINTS = ImmutableList.of("bicubic", "bilinear");
+    public static final ImmutableList<String> SUPPORTED_SCALING_HINTS = ImmutableList.of("n", "b");
     
     // list the command line arguments
     public static final String ARG_DIMENSIONS_SHORT = "d";

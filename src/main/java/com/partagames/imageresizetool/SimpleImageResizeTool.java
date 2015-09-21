@@ -23,8 +23,9 @@ public class SimpleImageResizeTool {
     private static Options options;
     private static String[] imageFileStrings;
     private static Dimensions dimensions;
-    private static String format;
-    private static String scalinghint;
+    private static Path outputFolder;
+    private static String format = OUTPUT_IMAGE_FORMATS.get(0); // default png
+    private static String scalinghint = SUPPORTED_SCALING_HINTS.get(1); // default bilinear
 
     private static final Map<String, BufferedImage> imageFiles = new HashMap<>();
 
@@ -41,7 +42,7 @@ public class SimpleImageResizeTool {
         options.addOption(Option.builder(ARG_OUTPUT_SHORT).longOpt(ARG_OUTPUT).hasArg(true).optionalArg(false)
                 .desc("Image output folder").required(false).build());
         options.addOption(Option.builder(ARG_HINT_SHORT).longOpt(ARG_HINT).hasArg(true).optionalArg(false)
-                .desc("Scaling hint (bicubic, bilinear)").required(false).build());
+                .desc("Scaling hint (n=nearest, b=bilinear)").required(false).build());
         options.addOption(Option.builder(ARG_HELP_SHORT).longOpt(ARG_HELP).hasArg(false)
                 .desc("Shows this help message.").required(false).build());
 
@@ -73,15 +74,15 @@ public class SimpleImageResizeTool {
             printHelpAndUsage();
             return false;
         }
-        
+
         if (cmd.getArgList().isEmpty()) {
             System.out.println("Missing argument: comma-separated list of images!\n");
             printHelpAndUsage();
         } else {
             imageFileStrings = cmd.getArgList().get(0).split(",");
         }
-        
-        
+
+
         // prepare mandatory arguments
         if (cmd.hasOption(ARG_DIMENSIONS)) {
             final String[] dimensionStrings = cmd.getOptionValue(ARG_DIMENSIONS).split("x");
@@ -96,7 +97,7 @@ public class SimpleImageResizeTool {
 
         // prepare optional arguments
         if (cmd.hasOption(ARG_OUTPUT)) {
-            System.out.println("Output folder not implemented!");
+            outputFolder = Paths.get(cmd.getOptionValue(ARG_OUTPUT));
         }
         if (cmd.hasOption(ARG_FORMAT)) {
             final String outputFormat = cmd.getOptionValue("format").toLowerCase();
@@ -109,7 +110,7 @@ public class SimpleImageResizeTool {
             }
         }
         if (cmd.hasOption(ARG_HINT)) {
-            System.out.println("Scaling hint not implemented!"); 
+            System.out.println("Scaling hint not implemented!");
         }
 
         return true;
@@ -133,24 +134,30 @@ public class SimpleImageResizeTool {
 
     private static void resizeAndWriteImages() {
 
-        // create output folder if it does not exist
-        final File outputFolder = new File("output/");
-        if (!outputFolder.exists()) {
-            outputFolder.mkdirs();
+        File outputFolderFile;
+        // if output folder is given as cli option
+        if (outputFolder != null) {
+            outputFolderFile = outputFolder.toFile();
+            if (!outputFolderFile.exists()) {
+                outputFolderFile.mkdirs();
+            }
+        } else {
+            // default output folder
+            outputFolderFile = new File("output/");
+            if (!outputFolderFile.exists()) {
+                outputFolderFile.mkdirs();
+            }
         }
 
         // resize and write images
-        int i = 0;
         for (String key : imageFiles.keySet()) {
-            i++;
-
             final String fileName = extractFileNameFromPath(key);
 
             final BufferedImage image = imageFiles.get(key);
             final BufferedImage scaledImage = scale(image, dimensions.width, dimensions.height);
             try {
-                ImageIO.write(scaledImage, "png",
-                        new File("output/" + dimensions.width + "_x_" + dimensions.height + " " + fileName + ".png"));
+                ImageIO.write(scaledImage, format,
+                        new File(outputFolderFile.getPath() + "/" + dimensions.width + "_x_" + dimensions.height + "_" + fileName + ".png"));
             } catch (IOException e) {
                 System.out.println("Cannot write " + key + " to output folder. Ignoring...");
             }
@@ -181,8 +188,19 @@ public class SimpleImageResizeTool {
         int h = img.getHeight();
         final BufferedImage dimg = new BufferedImage(newW, newH, img.getType());
         final Graphics2D g = dimg.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+
+        // use provided rendering hint, default is bilinear 
+        switch (scalinghint) {
+            case "n":
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                        RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+                break;
+            case "b":
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                        RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                break;
+        }
+
         g.drawImage(img, 0, 0, newW, newH, 0, 0, w, h, null);
         g.dispose();
         return dimg;
