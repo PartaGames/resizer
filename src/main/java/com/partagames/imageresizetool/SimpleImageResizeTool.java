@@ -78,6 +78,7 @@ public class SimpleImageResizeTool {
         if (cmd.getArgList().isEmpty()) {
             System.out.println("Missing argument: comma-separated list of images!\n");
             printHelpAndUsage();
+            return false;
         } else {
             imageFileStrings = cmd.getArgList().get(0).split(",");
         }
