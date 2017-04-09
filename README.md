@@ -20,4 +20,4 @@ resizer [options ...] [/folder/image1.png,/folder/image2.png ...]
 
 ## Downloads
 [Resizer 0.0.1](https://github.com/PartaGames/resizer/releases/download/0.0.1/resizer-0.0.1.zip)    
-[Resizer 0.0.2](https://github.com/PartaGames/resizer/releases/download/0.0.2/resizer-0.0.2.zip) (Latest)
+[Resizer 0.0.2](https://github.com/PartaGames/resizer/releases/download/v0.0.2-alpha/resizer-0.0.2.zip) (Latest)
