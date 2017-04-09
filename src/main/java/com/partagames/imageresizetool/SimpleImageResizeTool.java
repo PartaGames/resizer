@@ -50,7 +50,7 @@ public class SimpleImageResizeTool {
 
         // required options
         options.addOption(Option.builder(ARG_DIMENSIONS_SHORT).longOpt(ARG_DIMENSIONS).hasArg(true).optionalArg(false)
-                .desc("Target image dimensions in pixels (e.g 1280x720)").required(true).build());
+                .desc("Comma-separated list of target image dimensions in pixels (e.g 1280x720,1920x1080 ...)").required(true).build());
 
         // optional options
         options.addOption(Option.builder(ARG_FORMAT_SHORT).longOpt(ARG_FORMAT).hasArg(true).optionalArg(false)

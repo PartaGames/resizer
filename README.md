@@ -1,13 +1,16 @@
-# Resizer 0.0.1
-Simple Image Resizing Tool for quickly scaling multiple images to desired dimensions.
+# Resizer 0.0.2
+Simple Image Resizing Tool for quickly scaling images to desired dimensions.
+
+Supported input & output file types: png,jpg,gif
 
 ## Usage:
 
-resizer [options ...] [/folder/image1,/folder/image2 ...]    
+resizer [options ...] [/folder-with-images]    
+resizer [options ...] [/folder/image1.png,/folder/image2.png ...]    
     
--d,--dimensions <arg>    Target image dimensions in pixels (e.g 1280x720)    
+-d,--dimensions <arg>    Comma-separated list of target image dimensions in pixels (e.g 1280x720,1920x1080 ...)    
 -f,--format <arg>        Image output format (png,jpg,gif)    
--h,--help                Shows this help message.    
+-h,--help                Shows this help message.       
 -o,--output <arg>        Image output folder    
 -s,--scalinghint <arg>   Scaling hint (n=nearest, b=bilinear)    
 
@@ -16,4 +19,5 @@ resizer [options ...] [/folder/image1,/folder/image2 ...]
 * Java 7+ runtime
 
 ## Downloads
-[Resizer 0.0.1](https://github.com/PartaGames/resizer/releases/download/0.0.1/resizer-0.0.1.zip)
+[Resizer 0.0.1](https://github.com/PartaGames/resizer/releases/download/0.0.1/resizer-0.0.1.zip)    
+[Resizer 0.0.2](https://github.com/PartaGames/resizer/releases/download/0.0.2/resizer-0.0.2.zip) (Latest)
