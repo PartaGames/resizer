@@ -16,6 +16,8 @@
 package com.partagames.imageresizetool;
 
 /**
+ * Encapsulates image dimensions as pixels.
+ *
  * Created by Antti on 21.9.2015.
  */
 public class Dimensions {

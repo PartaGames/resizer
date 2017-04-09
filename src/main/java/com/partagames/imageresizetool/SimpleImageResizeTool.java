@@ -21,6 +21,7 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -79,6 +80,9 @@ public class SimpleImageResizeTool {
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd;
+
+        System.out.println("Resizer v" + Constants.VERSION + "\n");
+
         try {
             cmd = parser.parse(options, args);
         } catch (MissingOptionException | MissingArgumentException e) {
@@ -102,7 +106,23 @@ public class SimpleImageResizeTool {
             printHelpAndUsage();
             return false;
         } else {
-            imageFileStrings = cmd.getArgList().get(0).split(",");
+            final String folderArg = cmd.getArgList().get(0);
+            final File folder = new File(folderArg);
+            if (folder.isDirectory()) {
+                // folder was directory, find all supported image files inside
+                final File[] imageFiles = folder.listFiles(new SupportedFileNameFilter());
+                if (imageFiles.length > 0) {
+                    imageFileStrings = new String[imageFiles.length];
+                    for (int i = 0; i < imageFiles.length; i++) {
+                        imageFileStrings[i] = imageFiles[i].getAbsolutePath();
+                    }
+                } else {
+                    System.out.println("No input files found in directory: " + folderArg);
+                    return false;
+                }
+            } else {
+                imageFileStrings = folderArg.split(",");
+            }
         }
 
 
@@ -151,8 +171,9 @@ public class SimpleImageResizeTool {
      * Prints help and usage.
      */
     private static void printHelpAndUsage() {
-        // automatically generate the help statement
+        // generate the help statement
         final HelpFormatter formatter = new HelpFormatter();
+        System.out.println("usage: resizer [options ...] [/folder-with-images]");
         formatter.printHelp("resizer [options ...] [/folder/image1,/folder/image2 ...]", options);
     }
 
