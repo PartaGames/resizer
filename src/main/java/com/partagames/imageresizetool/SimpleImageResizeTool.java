@@ -38,7 +38,7 @@ public class SimpleImageResizeTool {
 
     private static Options options;
     private static String[] imageFileStrings;
-    private static Dimensions dimensions;
+    private static Dimensions[] dimensions;
     private static Path outputFolder;
     private static String format = OUTPUT_IMAGE_FORMATS.get(0); // default png
     private static String scalingHint = SUPPORTED_SCALING_HINTS.get(1); // default bilinear
@@ -128,13 +128,18 @@ public class SimpleImageResizeTool {
 
         // prepare mandatory arguments
         if (cmd.hasOption(ARG_DIMENSIONS)) {
-            final String[] dimensionStrings = cmd.getOptionValue(ARG_DIMENSIONS).split("x");
-            try {
-                dimensions = new Dimensions(Integer.parseInt(dimensionStrings[0]), Integer.parseInt(dimensionStrings[1]));
-            } catch (Exception e) {
-                System.out.println("Error: Dimension argument was not correct!\n");
-                printHelpAndUsage();
-                return false;
+            final String[] dimensionOptions = cmd.getOptionValue(ARG_DIMENSIONS).split(",");
+            dimensions = new Dimensions[dimensionOptions.length];
+
+            for (int i = 0; i < dimensionOptions.length; i++) {
+                final String[] dimensionStrings = dimensionOptions[i].split("x");
+                try {
+                    dimensions[i] = new Dimensions(Integer.parseInt(dimensionStrings[0]), Integer.parseInt(dimensionStrings[1]));
+                } catch (Exception e) {
+                    System.out.println("Error: Dimension argument was not correct: (" + dimensionOptions[i] + ")!\n");
+                    printHelpAndUsage();
+                    return false;
+                }
             }
         }
 
@@ -210,17 +215,19 @@ public class SimpleImageResizeTool {
             }
         }
 
-        // resize and write images
+        // resize and write each image file in provided dimensions
         for (String key : imageFiles.keySet()) {
-            final String fileName = extractFileNameFromPath(key);
+            for (Dimensions d : dimensions) {
+                final String fileName = extractFileNameFromPath(key);
 
-            final BufferedImage image = imageFiles.get(key);
-            final BufferedImage scaledImage = scale(image, dimensions.width, dimensions.height);
-            try {
-                ImageIO.write(scaledImage, format,
-                        new File(outputFolderFile.getPath() + "/" + dimensions.width + "_x_" + dimensions.height + "_" + fileName + "." + format));
-            } catch (IOException e) {
-                System.out.println("Error: Cannot write " + key + " to output folder. Ignoring...");
+                final BufferedImage image = imageFiles.get(key);
+                final BufferedImage scaledImage = scale(image, d.width, d.height);
+                try {
+                    ImageIO.write(scaledImage, format,
+                            new File(outputFolderFile.getPath() + "/" + d.width + "_x_" + d.height + "_" + fileName + "." + format));
+                } catch (IOException e) {
+                    System.out.println("Error: Cannot write " + key + " to output folder. Ignoring...");
+                }
             }
         }
     }
