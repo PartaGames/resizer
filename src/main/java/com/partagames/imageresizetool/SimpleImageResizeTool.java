@@ -215,6 +215,9 @@ public class SimpleImageResizeTool {
             }
         }
 
+        int numInputFiles = 0;
+        int numOutputFiles = 0;
+
         // resize and write each image file in provided dimensions
         for (String key : imageFiles.keySet()) {
             for (Dimensions d : dimensions) {
@@ -228,8 +231,13 @@ public class SimpleImageResizeTool {
                 } catch (IOException e) {
                     System.out.println("Error: Cannot write " + key + " to output folder. Ignoring...");
                 }
+
+                numOutputFiles++;
             }
+            numInputFiles++;
         }
+
+        System.out.println(numInputFiles + " input files resulted in " + numOutputFiles + " output files");
     }
 
     /**
