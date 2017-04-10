@@ -1,5 +1,5 @@
 # Resizer v0.0.2
-Simple Image Resizing Tool for quickly scaling images to desired dimensions.
+Simple Image Scaling Tool to quickly scale images to desired dimensions.
 
 Supported input & output file types: png,jpg,gif
 
