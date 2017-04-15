@@ -15,239 +15,69 @@
 */
 package com.partagames.imagescaletool;
 
-import org.apache.commons.cli.*;
-
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.partagames.imagescaletool.Constants.*;
-
 /**
- * Simple tool that takes a list of image files as arguments and saves new resized image files to the given folder.
+ * Tool utility that takes a list of image files as arguments and returns new resized images as files.
  * Created by Antti on 18.9.2015.
  */
 public class ImageScaleTool {
 
-    private static Options options;
-    private static String[] imageFileStrings;
-    private static Dimensions[] dimensions;
-    private static Path outputFolder;
-    private static ImageFormat format = ImageFormat.PNG; // default png
-    private static ScalingHint scalingHint = ScalingHint.BILINEAR; // default bilinear
-
-    private static final Map<String, BufferedImage> imageFiles = new HashMap<>();
-
-    public static void main(String[] args) throws Exception {
-        options = new Options();
-
-        // required options
-        options.addOption(Option.builder(ARG_DIMENSIONS_SHORT).longOpt(ARG_DIMENSIONS).hasArg(true).optionalArg(false)
-                .desc("Comma-separated list of target image dimensions in pixels (e.g 1280x720,1920x1080 ...)").required(true).build());
-
-        // optional options
-        options.addOption(Option.builder(ARG_FORMAT_SHORT).longOpt(ARG_FORMAT).hasArg(true).optionalArg(false)
-                .desc("Image output format (png,jpg,gif)").required(false).build());
-        options.addOption(Option.builder(ARG_OUTPUT_SHORT).longOpt(ARG_OUTPUT).hasArg(true).optionalArg(false)
-                .desc("Image output folder").required(false).build());
-        options.addOption(Option.builder(ARG_HINT_SHORT).longOpt(ARG_HINT).hasArg(true).optionalArg(false)
-                .desc("Scaling hint (n=nearest, b=bilinear)").required(false).build());
-        options.addOption(Option.builder(ARG_HELP_SHORT).longOpt(ARG_HELP).hasArg(false)
-                .desc("Shows this help message.").required(false).build());
-
-        if (parseAndPrepareArguments(args, options)) {
-            createBufferedImages();
-            resizeAndWriteImages();
-        }
-    }
-
     /**
-     * Parses all command line arguments and prepares them.
-     *
-     * @param args    Command line arguments.
-     * @param options Apache CLI options
-     * @return True if arguments were prepared correctly and we can continue execution
+     * Scales images to given dimensions & output format using given scaling hint
+     * @param imageFiles Input image files
+     * @param dimensions Target dimensions
+     * @param outputFormat Image output format
+     * @param scalingHint Scaling hint
+     * @return Output image files
      */
-    private static boolean parseAndPrepareArguments(String[] args, Options options) {
-        // parse through arguments and prepare them appropriately
-
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd;
-
-        System.out.println("Resizer v" + VERSION + "\n");
-
-        try {
-            cmd = parser.parse(options, args);
-        } catch (MissingOptionException | MissingArgumentException e) {
-            System.out.println(e.getMessage() + "\n");
-            printHelpAndUsage();
-            return false;
-        } catch (ParseException e2) {
-            System.out.println("Error: There was a problem parsing the command line arguments, please check your command.\n");
-            printHelpAndUsage();
-            throw new RuntimeException(e2);
-        }
-
-        // show help
-        if (cmd.hasOption(ARG_HELP)) {
-            printHelpAndUsage();
-            return false;
-        }
-
-        if (cmd.getArgList().isEmpty()) {
-            System.out.println("Error: Missing argument: comma-separated list of images!\n");
-            printHelpAndUsage();
-            return false;
-        } else {
-            final String folderArg = cmd.getArgList().get(0);
-            final File folder = new File(folderArg);
-            if (folder.isDirectory()) {
-                // folder was directory, find all supported image files inside
-                final File[] imageFiles = folder.listFiles(new SupportedFileNameFilter());
-                if (imageFiles.length > 0) {
-                    imageFileStrings = new String[imageFiles.length];
-                    for (int i = 0; i < imageFiles.length; i++) {
-                        imageFileStrings[i] = imageFiles[i].getAbsolutePath();
-                    }
-                } else {
-                    System.out.println("No input files found in directory: " + folderArg);
-                    return false;
-                }
-            } else {
-                imageFileStrings = folderArg.split(",");
-            }
-        }
-
-
-        // prepare mandatory arguments
-        if (cmd.hasOption(ARG_DIMENSIONS)) {
-            final String[] dimensionOptions = cmd.getOptionValue(ARG_DIMENSIONS).split(",");
-            dimensions = new Dimensions[dimensionOptions.length];
-
-            for (int i = 0; i < dimensionOptions.length; i++) {
-                final String[] dimensionStrings = dimensionOptions[i].split("x");
-                try {
-                    dimensions[i] = new Dimensions(Integer.parseInt(dimensionStrings[0]), Integer.parseInt(dimensionStrings[1]));
-                } catch (Exception e) {
-                    System.out.println("Error: Dimension argument was not correct: (" + dimensionOptions[i] + ")!\n");
-                    printHelpAndUsage();
-                    return false;
-                }
-            }
-        }
-
-        // prepare optional arguments
-        if (cmd.hasOption(ARG_OUTPUT)) {
-            outputFolder = Paths.get(cmd.getOptionValue(ARG_OUTPUT));
-        }
-        if (cmd.hasOption(ARG_FORMAT)) {
-            final String outputFormatString = cmd.getOptionValue("format").toLowerCase();
-            final ImageFormat imageFormat = ImageFormat.getByValue(outputFormatString);
-            if (imageFormat != null) {
-                format = imageFormat;
-            } else {
-                System.out.println("Error: Wrong output image format!\n");
-                printHelpAndUsage();
-                return false;
-            }
-        }
-        
-        if (cmd.hasOption(ARG_HINT)) {
-            final String scalingHintString = cmd.getOptionValue(ARG_HINT);
-            final ScalingHint sh = ScalingHint.getByValue(scalingHintString);
-            if (sh != null) {
-                scalingHint = sh;
-            } else {
-                System.out.println("Error: Wrong scaling hint!\n");
-                printHelpAndUsage();
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Prints help and usage.
-     */
-    private static void printHelpAndUsage() {
-        // generate the help statement
-        final HelpFormatter formatter = new HelpFormatter();
-        System.out.println("usage: resizer [options ...] [/folder-with-images]");
-        formatter.printHelp("resizer [options ...] [/folder/image1,/folder/image2 ...]", options);
-    }
-
-    /**
-     * Reads the images to memory.
-     */
-    private static void createBufferedImages() {
-        for (int i = 0; i < imageFileStrings.length; i++) {
-            try {
-                imageFiles.put(imageFileStrings[i], ImageIO.read(new File(imageFileStrings[i])));
-            } catch (IOException e) {
-                System.out.println("Warning: File " + imageFileStrings[i] + " missing, corrupted or not supported, ignoring...");
-            }
-        }
-    }
-
-    /**
-     * Resizes and writes the images to the given or default output folder.
-     */
-    private static void resizeAndWriteImages() {
-
-        File outputFolderFile;
-        // if output folder is given as cli option
-        if (outputFolder != null) {
-            outputFolderFile = outputFolder.toFile();
-            if (!outputFolderFile.exists()) {
-                outputFolderFile.mkdirs();
-            }
-        } else {
-            // default output folder
-            outputFolderFile = new File("output/");
-            if (!outputFolderFile.exists()) {
-                outputFolderFile.mkdirs();
-            }
-        }
-
+    public Map<String, BufferedImage> scale(Map<String, BufferedImage> imageFiles, Dimensions[] dimensions, ImageFormat outputFormat, ScalingHint scalingHint) {
         int numInputFiles = 0;
         int numOutputFiles = 0;
+
+        final Map<String, BufferedImage> scaledImages = new HashMap<>();
 
         // resize and write each image file in provided dimensions
         for (String key : imageFiles.keySet()) {
             for (Dimensions d : dimensions) {
-                final String fileName = extractFileNameFromPath(key);
+                final String fileName = extractFileNameFromFullPath(key);
 
                 final BufferedImage image = imageFiles.get(key);
-                final BufferedImage scaledImage = scale(image, d.width, d.height);
-                try {
-                    ImageIO.write(scaledImage, format.getValue(),
-                            new File(outputFolderFile.getPath() + "/" + d.width + "_x_" + d.height + "_" + fileName + "." + format));
-                } catch (IOException e) {
-                    System.out.println("Error: Cannot write " + key + " to output folder. Ignoring...");
-                }
+                final BufferedImage scaledImage = scale(image, d.width, d.height, scalingHint);
 
+                scaledImages.put(buildOutputFileName(d, fileName, outputFormat), scaledImage);
                 numOutputFiles++;
             }
             numInputFiles++;
         }
 
-        System.out.println(numInputFiles + " input files resulted in " + numOutputFiles + " output files");
+        System.out.println(numInputFiles + " input images resulted in " + numOutputFiles + " output images");
+        return scaledImages;
     }
 
     /**
-     * Extracts file name from full file path.
+     * Builds an output image file name from dimensions, original file name and output image format
+     * @param d Target dimensions
+     * @param originalFileName Original file name
+     * @param outputFormat Output image format
+     * @return File name without path information
+     */
+    private String buildOutputFileName(final Dimensions d, final String originalFileName, final ImageFormat outputFormat) {
+        return d.width + "_x_" + d.height + "_" + originalFileName + "." + outputFormat.getValue();
+    }
+
+    /**
+     * Extracts a file name from full path.
      *
      * @param filePath File path
      * @return File name
      */
-    private static String extractFileNameFromPath(String filePath) {
+    private String extractFileNameFromFullPath(String filePath) {
         final Path p = Paths.get(filePath);
         return p.getFileName().toString();
     }
@@ -258,9 +88,10 @@ public class ImageScaleTool {
      * @param img  Original image
      * @param newW Target width
      * @param newH Target height
+     * @param scalingHint Scaling hint to be used
      * @return Scaled image
      */
-    public static BufferedImage scale(BufferedImage img, int newW, int newH) {
+    private BufferedImage scale(final BufferedImage img, final int newW, final int newH, final ScalingHint scalingHint) {
         int w = img.getWidth();
         int h = img.getHeight();
         final BufferedImage dimg = new BufferedImage(newW, newH, img.getType());
@@ -273,6 +104,7 @@ public class ImageScaleTool {
                         RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
                 break;
             case BILINEAR:
+            default:
                 g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                         RenderingHints.VALUE_INTERPOLATION_BILINEAR);
                 break;
