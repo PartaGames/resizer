@@ -12,8 +12,8 @@ public class SupportedFileNameFilter implements FilenameFilter {
     @Override
     public boolean accept(File dir, String name) {
         boolean fileIsSupported = false;
-        for (String supportedFileExtension : Constants.OUTPUT_IMAGE_FORMATS) {
-            fileIsSupported = name.toLowerCase().contains(("." + supportedFileExtension).toLowerCase());
+        for (ImageFormat supportedImageFormat : ImageFormat.values()) {
+            fileIsSupported = name.toLowerCase().contains(("." + supportedImageFormat.getValue()).toLowerCase());
             if (fileIsSupported) {
                 break;
             }

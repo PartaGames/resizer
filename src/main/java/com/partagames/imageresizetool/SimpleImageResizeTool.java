@@ -21,7 +21,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,8 +39,8 @@ public class SimpleImageResizeTool {
     private static String[] imageFileStrings;
     private static Dimensions[] dimensions;
     private static Path outputFolder;
-    private static String format = OUTPUT_IMAGE_FORMATS.get(0); // default png
-    private static String scalingHint = SUPPORTED_SCALING_HINTS.get(1); // default bilinear
+    private static ImageFormat format = ImageFormat.PNG; // default png
+    private static ScalingHint scalingHint = ScalingHint.BILINEAR; // default bilinear
 
     private static final Map<String, BufferedImage> imageFiles = new HashMap<>();
 
@@ -81,7 +80,7 @@ public class SimpleImageResizeTool {
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd;
 
-        System.out.println("Resizer v" + Constants.VERSION + "\n");
+        System.out.println("Resizer v" + VERSION + "\n");
 
         try {
             cmd = parser.parse(options, args);
@@ -149,8 +148,9 @@ public class SimpleImageResizeTool {
         }
         if (cmd.hasOption(ARG_FORMAT)) {
             final String outputFormatString = cmd.getOptionValue("format").toLowerCase();
-            if (Constants.OUTPUT_IMAGE_FORMATS.contains(outputFormatString)) {
-                format = outputFormatString;
+            final ImageFormat imageFormat = ImageFormat.getByValue(outputFormatString);
+            if (imageFormat != null) {
+                format = imageFormat;
             } else {
                 System.out.println("Error: Wrong output image format!\n");
                 printHelpAndUsage();
@@ -160,8 +160,9 @@ public class SimpleImageResizeTool {
         
         if (cmd.hasOption(ARG_HINT)) {
             final String scalingHintString = cmd.getOptionValue(ARG_HINT);
-            if (SUPPORTED_SCALING_HINTS.contains(scalingHintString)) {
-                scalingHint = scalingHintString;
+            final ScalingHint sh = ScalingHint.getByValue(scalingHintString);
+            if (sh != null) {
+                scalingHint = sh;
             } else {
                 System.out.println("Error: Wrong scaling hint!\n");
                 printHelpAndUsage();
@@ -226,7 +227,7 @@ public class SimpleImageResizeTool {
                 final BufferedImage image = imageFiles.get(key);
                 final BufferedImage scaledImage = scale(image, d.width, d.height);
                 try {
-                    ImageIO.write(scaledImage, format,
+                    ImageIO.write(scaledImage, format.getValue(),
                             new File(outputFolderFile.getPath() + "/" + d.width + "_x_" + d.height + "_" + fileName + "." + format));
                 } catch (IOException e) {
                     System.out.println("Error: Cannot write " + key + " to output folder. Ignoring...");
@@ -267,11 +268,11 @@ public class SimpleImageResizeTool {
 
         // use provided rendering hint, default is bilinear 
         switch (scalingHint) {
-            case "n":
+            case NEAREST:
                 g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                         RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
                 break;
-            case "b":
+            case BILINEAR:
                 g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                         RenderingHints.VALUE_INTERPOLATION_BILINEAR);
                 break;
