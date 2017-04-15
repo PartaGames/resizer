@@ -33,7 +33,7 @@ import static com.partagames.imagescaletool.Constants.*;
  * Simple tool that takes a list of image files as arguments and saves new resized image files to the given folder.
  * Created by Antti on 18.9.2015.
  */
-public class SimpleImageResizeTool {
+public class ImageScaleTool {
 
     private static Options options;
     private static String[] imageFileStrings;
