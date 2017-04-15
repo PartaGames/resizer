@@ -29,7 +29,7 @@ dependencies {
     testCompile "junit:junit:4.11+"
 }
 
-mainClassName = "com.partagames.imageresizetool.SimpleImageResizeTool"
+mainClassName = "com.partagames.imagescaletool.SimpleImageResizeTool"
 
 task wrapper(type: Wrapper) {
     gradleVersion = '3.1'

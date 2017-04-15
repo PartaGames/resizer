@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package com.partagames.imageresizetool;
+package com.partagames.imagescaletool;
 
 import org.apache.commons.cli.*;
 
@@ -27,7 +27,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.partagames.imageresizetool.Constants.*;
+import static com.partagames.imagescaletool.Constants.*;
 
 /**
  * Simple tool that takes a list of image files as arguments and saves new resized image files to the given folder.

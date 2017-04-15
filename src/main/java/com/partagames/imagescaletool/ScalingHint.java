@@ -1,4 +1,4 @@
-package com.partagames.imageresizetool;
+package com.partagames.imagescaletool;
 
 /**
  * Created by antti on 15/04/2017.

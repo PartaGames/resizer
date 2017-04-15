@@ -1,4 +1,4 @@
-package com.partagames.imageresizetool;
+package com.partagames.imagescaletool;
 
 import java.io.File;
 import java.io.FilenameFilter;
